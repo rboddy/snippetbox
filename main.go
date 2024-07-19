@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 // Define a home handler function which writes a byte slice containing
@@ -14,7 +16,14 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 // add a snippetview handler function
 func snippetView(w http.ResponseWriter, r *http.Request){
-  w.Write([]byte("Display a specific snippet..."))
+  id, err := strconv.Atoi(r.PathValue("id"))
+  if err != nil || id < 1 {
+    http.NotFound(w, r)
+    return
+  }
+
+  msg := fmt.Sprintf("Display a specific snippet with ID %d", id)
+  w.Write([]byte(msg))
 }
 
 // add a snippetCreate handler function
@@ -26,8 +35,8 @@ func main() {
   // use the http.NewServeMux() function to initialize a new servemux, then
   // register the home function as the handler for the "/"
   mux := http.NewServeMux()
-  mux.HandleFunc("/", home)
-  mux.HandleFunc("/snippet/view", snippetView)
+  mux.HandleFunc("/{$}", home)
+  mux.HandleFunc("/snippet/view/{id}", snippetView) // add the {id} wildcard segment
   mux.HandleFunc("/snippet/create", snippetCreate)
 
   // print a log message to say that the server is starting
